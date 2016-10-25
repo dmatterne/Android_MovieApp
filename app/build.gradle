@@ -17,6 +17,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    packagingOptions{
+        exclude 'META-INF/LICENSE'
+    }
 }
 
 dependencies {
@@ -29,5 +32,8 @@ dependencies {
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
     compile 'com.omertron:themoviedbapi:4.3'
     compile 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
+    compile 'com.android.support:recyclerview-v7:24.2.1'
+    compile 'com.android.support:cardview-v7:24.2.1'
+//    compile 'com.android.volley:volley:1.0.0'
     testCompile 'junit:junit:4.12'
 }

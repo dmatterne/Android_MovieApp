@@ -1,11 +1,15 @@
 package be.david.mangaapp;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.tts.Voice;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -16,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -23,17 +28,42 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
+import com.omertron.themoviedbapi.enumeration.SearchType;
 import com.omertron.themoviedbapi.model.config.Configuration;
+import com.omertron.themoviedbapi.model.discover.Discover;
+import com.omertron.themoviedbapi.model.movie.MovieBasic;
+import com.omertron.themoviedbapi.model.tv.TVBasic;
+import com.omertron.themoviedbapi.results.ResultList;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, AppController.OnMovieListChangedListener {
 
+    private final static int DISCOVER_ID = 1;
+    private final static int ANIME_ID = 2;
+    private final static int DISNEY_ID = 3;
+    private RecyclerView recyclerView;
+    private MovieListAdapter movieListAdapter;
 
-    private final static String API_URL = "https://anilist.co/api/";
-    private final static String API_ID = "";
-    private final static String API_KEY = "8f8d6e798210f82251d18da8d84d761e";
-    private TheMovieDbApi api;
-    private Configuration configuration;
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        AppController.getInstance().addOnMovieListChangedListener(this);
+        movieListAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        AppController.getInstance().removeOnMovieListChangedListener(this);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +71,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -75,22 +106,21 @@ public class MainActivity extends AppCompatActivity
 
         ImageLoader.getInstance().init(config);
 
-
-        try {
-            api = new TheMovieDbApi(API_KEY);
-            FetchConfiguration fetchConfiguration = new FetchConfiguration();
-            fetchConfiguration.execute();
-            FetchMovieInfo fetchMovieInfo = new FetchMovieInfo();
-            fetchMovieInfo.execute();   // type object: asynchtask
+        movieListAdapter = new MovieListAdapter(this,
+                AppController.getInstance().getMovieBasicList());
 
 
-        } catch (MovieDbException e){
-            e.printStackTrace();
-            Log.e("TheMovieDbApi", "Error: " +e.getMessage() );
-        }
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerView.setAdapter(movieListAdapter);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
 
     }
+
+
+
+
 
     @Override
     public void onBackPressed() {
@@ -130,17 +160,18 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.discover) {
+
+            AppController.getInstance().getMovieInfoResults(DISCOVER_ID);
+
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
+            AppController.getInstance().getMovieInfoResults(ANIME_ID);
 
         } else if (id == R.id.nav_share) {
 
-        } else if (id == R.id.nav_send) {
+            AppController.getInstance().getMovieInfoResults(DISNEY_ID);
 
         }
 
@@ -149,25 +180,9 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private class FetchConfiguration extends AsyncTask<Void,Void, Configuration> {
 
-
-        @Override
-        protected Configuration doInBackground(Void... params) {
-
-            try {
-                return api.getConfiguration();
-            } catch (MovieDbException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        protected void onPostExecute(Configuration configuration) {
-
-            MainActivity.this.configuration = configuration;
-
-        }
-
+    @Override
+    public void onMovieListChanged() {
+        movieListAdapter.notifyDataSetChanged();
     }
 }

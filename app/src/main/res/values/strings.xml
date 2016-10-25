@@ -1,8 +1,14 @@
 <resources>
-    <string name="app_name">MangaApp</string>
+    <string name="app_name">Movie App</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="cardMovieTitle">Title</string>
+    <string name="cardMovieDesc">Description</string>
+    <string name="cardMovieRelease">Release</string>
+    <string name="cardMovieScore">Score</string>
+    <string name="menuDiscover">Discover</string>
+    <string name="detail_title">Title</string>
 </resources>
