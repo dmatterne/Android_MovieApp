@@ -1,16 +1,23 @@
 package be.david.mangaapp;
 
 import android.app.Application;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
 import com.omertron.themoviedbapi.model.config.Configuration;
 import com.omertron.themoviedbapi.model.discover.Discover;
 import com.omertron.themoviedbapi.model.movie.MovieBasic;
+import com.omertron.themoviedbapi.model.movie.MovieInfo;
 import com.omertron.themoviedbapi.results.ResultList;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -23,6 +30,10 @@ public class AppController extends Application {
 
     private static AppController instance;
     private List<MovieBasic> movieBasicList = new ArrayList<>();
+
+
+
+    private MovieInfo movieInfo = new MovieInfo();
     private String API_KEY;
     private final static int DISCOVER_ID = 1;
     private final static int ANIME_ID = 2;
@@ -37,6 +48,21 @@ public class AppController extends Application {
         super.onCreate();
         instance = this;
 
+        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
+                .cacheInMemory(true)
+                .cacheOnDisk(true)
+                .showImageForEmptyUri(R.drawable.ic_hourglass_empty_black_24dp)
+                .showImageOnLoading(R.drawable.ic_hourglass_empty_black_24dp)
+                .displayer(new FadeInBitmapDisplayer(500))
+                .build();
+
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
+                .defaultDisplayImageOptions(defaultOptions)
+                .denyCacheImageMultipleSizesInMemory()
+                .build();
+
+        ImageLoader.getInstance().init(config);
+
         API_KEY = getString(R.string.api);
 
         try {
@@ -47,15 +73,50 @@ public class AppController extends Application {
 
         executeFetchConfiguration();
 
-        getMovieInfoResults(DISCOVER_ID);
+        movieBasicResults(DISCOVER_ID);
+
+
     }
 
     public static  synchronized AppController getInstance() {
         return instance;
     }
 
+    private class FetchMovieDetails extends AsyncTask<Void,Void,MovieInfo> {
 
-    private class FetchMovieInfo extends AsyncTask<Void,Void,ResultList<MovieBasic>> {
+        private int movieId;
+
+        @Override
+        protected void onPostExecute(MovieInfo movieInfos) {
+            super.onPostExecute(movieInfos);
+
+
+
+            Intent i = new Intent(getBaseContext(), MovieDetailActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            i.putExtra("Movie", movieInfos);
+//            Log.v("ERROOOOOOOOOOR", "" + movieInfos.getTitle());
+            getBaseContext().startActivity(i);
+        }
+
+        @Override
+        protected MovieInfo doInBackground(Void... params) {
+            try {
+//                Log.v("ERROOOOOOOOOOR", "" + movieId);
+                return api.getMovieInfo(movieId,"en-US",null);
+            } catch (MovieDbException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        public FetchMovieDetails(int movieId) {
+            this.movieId = movieId;
+        }
+    }
+
+
+    private class FetchMovieBasic extends AsyncTask<Void,Void,ResultList<MovieBasic>> {
 
         private int selection;
 
@@ -67,6 +128,7 @@ public class AppController extends Application {
                 if (selection == DISCOVER_ID)
 
                     return api.getDiscoverMovies(new Discover());
+
                 if (selection == DISNEY_ID) {
                     return api.getCompanyMovies(6421, "en-US",1);
                 }
@@ -90,7 +152,7 @@ public class AppController extends Application {
 //            movieListAdapter.notifyDataSetChanged();
         }
 
-        public FetchMovieInfo(int selection) {
+        public FetchMovieBasic(int selection) {
             this.selection = selection;
         }
     }
@@ -118,18 +180,7 @@ public class AppController extends Application {
 
         }
 
-
-
     }
-
-    public TheMovieDbApi getApi() {
-        return api;
-    }
-
-    public void setApi(TheMovieDbApi api) {
-        this.api = api;
-    }
-
 
     public void executeFetchConfiguration() {
 
@@ -139,27 +190,25 @@ public class AppController extends Application {
 
     }
 
-    public void executeFetchMovie(int id) {
-
-        FetchMovieInfo fetchMovieInfo = new FetchMovieInfo(id);
-
-        fetchMovieInfo.execute();
-
-    }
-
     public List<MovieBasic> getMovieBasicList() {
-
-
 
         return movieBasicList;
     }
 
-    public void getMovieInfoResults(int id) {
+    public void movieInfoResult(int id) {
 
-         executeFetchMovie(id);
+        FetchMovieDetails fetchMovieDetails = new FetchMovieDetails(id);
 
+        fetchMovieDetails.execute();
     }
 
+    public void movieBasicResults(int id) {
+
+        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(id);
+
+        fetchMovieInfo.execute();
+
+    }
 
     public Configuration getConfiguration() {
         return configuration;
@@ -192,6 +241,16 @@ public class AppController extends Application {
         listeners.remove(onMovieListChangedListener);
     }
 
+    public URL createImageUrl(String path, String size) {
 
+        try {
+            return this.configuration.createImageUrl(path, size);
+        } catch (MovieDbException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
 
 }

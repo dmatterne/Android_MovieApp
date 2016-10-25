@@ -5,23 +5,54 @@
     android:id="@+id/activity_movie_detail"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="10dp"
     tools:context="be.david.mangaapp.MovieDetailActivity">
 
     <ImageView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
         android:id="@+id/imageDetailView"
         />
 
     <TextView
-        android:text="@string/detail_title"
+        android:text="Title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/titleDetail"
-        android:layout_below="@id/imageDetailView"
+        android:layout_marginTop="15dp"
+        android:textStyle="bold"
+        android:textSize="15sp"
         android:layout_centerHorizontal="true"
-        android:layout_weight="1"
-        />
+        android:layout_below="@id/imageDetailView"
+        android:id="@+id/detailTitle" />
+
+    <TextView
+        android:text="Description"
+        android:layout_width="300dp"
+        android:layout_marginTop="15dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/detailTitle"
+        android:id="@+id/detailDescription" />
+
+    <TextView
+        android:text="Release"
+        android:layout_width="150dp"
+        android:layout_marginTop="15dp"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/detailDescription"
+        android:layout_below="@id/detailDescription"
+        android:id="@+id/detailRelease" />
+
+    <TextView
+        android:text="Lang"
+        android:layout_width="150dp"
+        android:layout_marginTop="15dp"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@id/detailDescription"
+        android:layout_below="@id/detailDescription"
+        android:layout_toRightOf="@id/detailRelease"
+        android:id="@+id/detailOrigLang" />
 
 
 </RelativeLayout>

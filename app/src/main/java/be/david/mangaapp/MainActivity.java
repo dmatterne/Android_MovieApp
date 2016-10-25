@@ -91,29 +91,17 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
-                .cacheInMemory(true)
-                .cacheOnDisk(true)
-                .showImageForEmptyUri(R.drawable.ic_hourglass_empty_black_24dp)
-                .showImageOnLoading(R.drawable.ic_hourglass_empty_black_24dp)
-                .displayer(new FadeInBitmapDisplayer(500))
-                .build();
 
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
-                .defaultDisplayImageOptions(defaultOptions)
-                .denyCacheImageMultipleSizesInMemory()
-                .build();
-
-        ImageLoader.getInstance().init(config);
 
         movieListAdapter = new MovieListAdapter(this,
                 AppController.getInstance().getMovieBasicList());
-
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.setAdapter(movieListAdapter);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+
 
 
     }
@@ -162,16 +150,17 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.discover) {
 
-            AppController.getInstance().getMovieInfoResults(DISCOVER_ID);
+            AppController.getInstance().movieBasicResults(DISCOVER_ID);
 
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
-            AppController.getInstance().getMovieInfoResults(ANIME_ID);
+            //TODO: Add anime screen
+//            AppController.getInstance().getMovieBasicResults(ANIME_ID);
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_disney) {
 
-            AppController.getInstance().getMovieInfoResults(DISNEY_ID);
+            AppController.getInstance().movieBasicResults(DISNEY_ID);
 
         }
 

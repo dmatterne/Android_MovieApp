@@ -15,9 +15,9 @@
     <item android:title="Communicate">
         <menu>
             <item
-                android:id="@+id/nav_share"
+                android:id="@+id/nav_disney"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="Disney" />
         </menu>
     </item>
 
