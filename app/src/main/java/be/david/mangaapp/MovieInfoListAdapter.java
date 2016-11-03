@@ -1,14 +1,16 @@
 package be.david.mangaapp;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.omertron.themoviedbapi.model.movie.MovieBasic;
+import com.omertron.themoviedbapi.model.movie.MovieInfo;
+
 import java.net.URL;
 import java.util.List;
 
@@ -16,16 +18,16 @@ import java.util.List;
  * Created by David on 24/10/2016.
  */
 
-public class MovieListAdapter extends RecyclerView.Adapter<MovieViewHolder> {
+public class MovieInfoListAdapter extends RecyclerView.Adapter<MovieViewHolder> {
 
 
 
     private Context context;
-    private List<MovieBasic> movieList;
+    private List<MovieInfo> movieInfoList;
 
-    public MovieListAdapter(Context c, List<MovieBasic> movieList) {
+    public MovieInfoListAdapter(Context c, List<MovieInfo> movieList) {
         this.context = c;
-        this.movieList = movieList;
+        this.movieInfoList = movieList;
     }
 
     @Override
@@ -35,13 +37,10 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieViewHolder> {
         return new MovieViewHolder(view);
     }
 
-
-
-
     @Override
     public void onBindViewHolder(MovieViewHolder holder, final int position) {
 
-        final MovieBasic vl = movieList.get(position);
+        final MovieInfo vl = movieInfoList.get(position);
 //        ImageLoader.getInstance().displayImage(imageUrl.toString());
 //        holder.getImageView().setImageResource(v.getPosterPath());
         holder.getTitle().setText(vl.getTitle());
@@ -72,7 +71,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieViewHolder> {
 
     @Override
     public int getItemCount() {
-        return movieList.size();
+        return movieInfoList.size();
     }
 
 

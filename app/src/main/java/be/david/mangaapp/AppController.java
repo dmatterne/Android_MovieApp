@@ -11,6 +11,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
+import com.omertron.themoviedbapi.enumeration.SearchType;
 import com.omertron.themoviedbapi.model.config.Configuration;
 import com.omertron.themoviedbapi.model.discover.Discover;
 import com.omertron.themoviedbapi.model.movie.MovieBasic;
@@ -30,6 +31,8 @@ public class AppController extends Application {
 
     private static AppController instance;
     private List<MovieBasic> movieBasicList = new ArrayList<>();
+    private List<MovieInfo> movieInfoList = new ArrayList<>();
+    private final static boolean ALLOW_ADULT = true;
 
 
 
@@ -40,6 +43,7 @@ public class AppController extends Application {
     private final static int DISNEY_ID = 3;
     private Configuration configuration;
     private List<OnMovieListChangedListener> listeners = new ArrayList<>();
+    private String query;
 
     private TheMovieDbApi api;
 
@@ -73,7 +77,7 @@ public class AppController extends Application {
 
         executeFetchConfiguration();
 
-        movieBasicResults(DISCOVER_ID);
+        movieBasicResults(DISCOVER_ID,true);
 
 
     }
@@ -115,22 +119,64 @@ public class AppController extends Application {
         }
     }
 
+    private class SearchMovieInfo extends AsyncTask<Void,Void,ResultList<MovieInfo>> {
+
+        private String queryText;
+
+        @Override
+        protected void onPostExecute(ResultList<MovieInfo> movieInfoResultList) {
+            super.onPostExecute(movieInfoResultList);
+
+            Log.v("Found", movieInfoResultList.toString());
+
+            movieBasicList.clear();
+            movieBasicList.addAll(movieInfoResultList.getResults());
+            notifyAllMovieListeners();
+        }
+
+        @Override
+        protected ResultList<MovieInfo> doInBackground(Void... params) {
+            try {
+
+
+                    return api.searchMovie(queryText,1,"en-US",ALLOW_ADULT,null,null, SearchType.PHRASE);
+
+
+            } catch (MovieDbException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        public SearchMovieInfo( String text) {
+
+
+            queryText = text;
+        }
+    }
 
     private class FetchMovieBasic extends AsyncTask<Void,Void,ResultList<MovieBasic>> {
 
+        private boolean clear;
         private int selection;
+        public int page;
 
         @Override
         protected ResultList<MovieBasic> doInBackground(Void... params) {
 
 
             try {
-                if (selection == DISCOVER_ID)
+                if (selection == DISCOVER_ID) {
 
-                    return api.getDiscoverMovies(new Discover());
+                    System.out.println("Fetching page:" + page);
+                    Discover disc = new Discover().page(page);
+                    return api.getDiscoverMovies(disc);
+                }
+
 
                 if (selection == DISNEY_ID) {
-                    return api.getCompanyMovies(6421, "en-US",1);
+                    return api.getCompanyMovies(6421, "en-US",page);
                 }
 
             } catch (MovieDbException e) {
@@ -145,14 +191,20 @@ public class AppController extends Application {
             super.onPostExecute(movieBasicResultList);
 
             Log.v("Found", movieBasicResultList.toString());
+            System.out.println(movieBasicResultList.getResults().size());
+            System.out.println(movieBasicResultList);
 
-            movieBasicList.clear();
+            if (clear) {
+                movieBasicList.clear();
+            }
             movieBasicList.addAll(movieBasicResultList.getResults());
             notifyAllMovieListeners();
 //            movieListAdapter.notifyDataSetChanged();
         }
 
-        public FetchMovieBasic(int selection) {
+        public FetchMovieBasic( boolean clear, int page, int selection) {
+            this.clear = clear;
+            this.page = page;
             this.selection = selection;
         }
     }
@@ -202,9 +254,28 @@ public class AppController extends Application {
         fetchMovieDetails.execute();
     }
 
-    public void movieBasicResults(int id) {
+    public void movieBasicResults(int id, boolean clear) {
 
-        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(id);
+        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(clear,1,id);
+
+        fetchMovieInfo.execute();
+
+    }
+
+    public void movieSearchResult( String text) {
+
+        this.query = text;
+
+        SearchMovieInfo searchMovieInfo = new SearchMovieInfo(text);
+
+        searchMovieInfo.execute();
+
+
+    }
+
+    public void loadSearchMovieInfoByPage(int page) {
+
+        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(false,page,DISCOVER_ID);
 
         fetchMovieInfo.execute();
 

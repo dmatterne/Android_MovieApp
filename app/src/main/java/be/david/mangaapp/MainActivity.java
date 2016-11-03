@@ -1,54 +1,38 @@
 package be.david.mangaapp;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.media.Image;
-import android.os.AsyncTask;
+import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.os.Bundle;
-import android.speech.tts.Voice;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.os.Parcelable;
+import android.os.PersistableBundle;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.view.View;
+import android.support.v7.widget.SearchView;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
-
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
-import com.omertron.themoviedbapi.MovieDbException;
-import com.omertron.themoviedbapi.TheMovieDbApi;
-import com.omertron.themoviedbapi.enumeration.SearchType;
-import com.omertron.themoviedbapi.model.config.Configuration;
-import com.omertron.themoviedbapi.model.discover.Discover;
-import com.omertron.themoviedbapi.model.movie.MovieBasic;
-import com.omertron.themoviedbapi.model.tv.TVBasic;
-import com.omertron.themoviedbapi.results.ResultList;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, AppController.OnMovieListChangedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, AppController.OnMovieListChangedListener, SearchView.OnQueryTextListener {
 
     private final static int DISCOVER_ID = 1;
     private final static int ANIME_ID = 2;
     private final static int DISNEY_ID = 3;
     private RecyclerView recyclerView;
     private MovieListAdapter movieListAdapter;
+    private EndlessRecyclerScrollListener endlessScrollListener;
+    private LinearLayoutManager linearLayoutManager;
+    private final String KEY_RECYCLER_STATE = "recycler_state";
+    private static Bundle mBundleRecyclerViewState;
 
     @Override
     protected void onResume() {
@@ -56,13 +40,25 @@ public class MainActivity extends AppCompatActivity
 
         AppController.getInstance().addOnMovieListChangedListener(this);
         movieListAdapter.notifyDataSetChanged();
+
+        if (mBundleRecyclerViewState != null) {
+            Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
+            recyclerView.getLayoutManager().onRestoreInstanceState(listState);
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
+        mBundleRecyclerViewState = new Bundle();
+        Parcelable listState = recyclerView.getLayoutManager().onSaveInstanceState();
+        mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE, listState);
+
+
         AppController.getInstance().removeOnMovieListChangedListener(this);
+
+
     }
 
     @Override
@@ -73,14 +69,14 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -98,17 +94,23 @@ public class MainActivity extends AppCompatActivity
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.setAdapter(movieListAdapter);
+        linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-
+        endlessScrollListener = new EndlessRecyclerScrollListener(linearLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to the bottom of the list
+                AppController.getInstance().loadSearchMovieInfoByPage(page);
+            }
+        };
+        // Adds the scroll listener to RecyclerView
+        recyclerView.addOnScrollListener(endlessScrollListener);
 
 
     }
-
-
-
-
 
     @Override
     public void onBackPressed() {
@@ -124,6 +126,18 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setLayoutParams(new ActionBar.LayoutParams(Gravity.RIGHT));
+        searchView.setOnQueryTextListener(this);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(
+                new ComponentName(this, MainActivity.class)));
+        searchView.setIconifiedByDefault(false);
+
+
         return true;
     }
 
@@ -135,9 +149,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -150,7 +164,7 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.discover) {
 
-            AppController.getInstance().movieBasicResults(DISCOVER_ID);
+            AppController.getInstance().movieBasicResults(DISCOVER_ID,true);
 
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
@@ -160,7 +174,7 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_disney) {
 
-            AppController.getInstance().movieBasicResults(DISNEY_ID);
+            AppController.getInstance().movieBasicResults(DISNEY_ID,true);
 
         }
 
@@ -173,5 +187,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMovieListChanged() {
         movieListAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        System.out.println("query:" + query);
+
+        AppController.getInstance().movieSearchResult(query);
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        return false;
     }
 }

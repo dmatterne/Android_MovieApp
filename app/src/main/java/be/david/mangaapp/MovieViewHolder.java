@@ -34,6 +34,8 @@ public class MovieViewHolder extends RecyclerView.ViewHolder {
 
     }
 
+
+
     public CardView getCardView() {
         return cardView;
     }
