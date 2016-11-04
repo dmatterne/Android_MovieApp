@@ -44,13 +44,15 @@ public class AppController extends Application {
     private List<OnMovieListChangedListener> listeners = new ArrayList<>();
     private String query;
     private List<MediaCreditCast> cast = new ArrayList<>();
-
     private TheMovieDbApi api;
+    private DBAdapter dbAdapter;
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
+        dbAdapter = new DBAdapter(this);
+        dbAdapter.open();
 
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
                 .cacheInMemory(true)
@@ -85,6 +87,117 @@ public class AppController extends Application {
     public static  synchronized AppController getInstance() {
         return instance;
     }
+
+    public void executeFetchConfiguration() {
+
+
+        FetchConfiguration fetchConfiguration = new FetchConfiguration();
+        fetchConfiguration.execute();
+
+    }
+
+    public List<MovieBasic> getMovieBasicList() {
+
+        return movieBasicList;
+    }
+
+
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public interface OnMovieListChangedListener {
+
+        void onMovieListChanged();
+
+    }
+
+    private void notifyAllMovieListeners() {
+
+        for (OnMovieListChangedListener listener: listeners) {
+
+            listener.onMovieListChanged();
+
+        }
+
+    }
+
+
+
+    public void addOnMovieListChangedListener(OnMovieListChangedListener onMovieListChangedListener) {
+
+        listeners.add(onMovieListChangedListener);
+
+    }
+
+    public void removeOnMovieListChangedListener(OnMovieListChangedListener onMovieListChangedListener) {
+
+        listeners.remove(onMovieListChangedListener);
+    }
+
+    public URL createImageUrl(String path, String size) {
+
+        try {
+            return this.configuration.createImageUrl(path, size);
+        } catch (MovieDbException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
+
+
+
+    public void movieInfoResult(int id) {
+
+        FetchMovieDetails fetchMovieDetails = new FetchMovieDetails(id);
+
+        fetchMovieDetails.execute();
+    }
+
+    public void movieBasicResults(int id, boolean clear) {
+
+        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(clear,1,id);
+
+        fetchMovieInfo.execute();
+
+    }
+
+    public void watchedMovieResults() {
+
+        movieBasicList.clear();
+        movieBasicList.addAll(dbAdapter.getAllMovies());
+        notifyAllMovieListeners();
+
+    }
+
+    public void movieSearchResult( String text) {
+
+        this.query = text;
+
+        SearchMovieInfo searchMovieInfo = new SearchMovieInfo(text);
+
+        searchMovieInfo.execute();
+
+
+    }
+
+    public void loadSearchMovieInfoByPage(int page) {
+
+        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(false,page,DISCOVER_ID);
+
+        fetchMovieInfo.execute();
+
+    }
+
+    public void fetchCast(int id){
+        FetchCastFromMovie fetchItAgain = new FetchCastFromMovie();
+        fetchItAgain.execute(id);
+    }
+
+
 
     private class FetchMovieDetails extends AsyncTask<Void,Void,MovieInfo> {
 
@@ -139,7 +252,7 @@ public class AppController extends Application {
             try {
 
 
-                    return api.searchMovie(queryText,1,"en-US",ALLOW_ADULT,null,null, SearchType.PHRASE);
+                return api.searchMovie(queryText,1,"en-US",ALLOW_ADULT,null,null, SearchType.PHRASE);
 
 
             } catch (MovieDbException e) {
@@ -234,7 +347,6 @@ public class AppController extends Application {
 
     }
 
-    //cast
     private class FetchCastFromMovie extends AsyncTask<Integer, Void, MediaCreditList>{
 
         @Override
@@ -259,102 +371,24 @@ public class AppController extends Application {
         }
     }
 
-    public void executeFetchConfiguration() {
 
+    public void saveMovie(String name, int tmdb_id, int score, String overview, boolean watched) {
 
-        FetchConfiguration fetchConfiguration = new FetchConfiguration();
-        fetchConfiguration.execute();
-
+        dbAdapter.insertMovie(name,tmdb_id,0 ,overview,watched);
     }
 
-    public List<MovieBasic> getMovieBasicList() {
+    public void removeMovie(int tmdb_id) {
 
-        return movieBasicList;
-    }
-
-    public void movieInfoResult(int id) {
-
-        FetchMovieDetails fetchMovieDetails = new FetchMovieDetails(id);
-
-        fetchMovieDetails.execute();
-    }
-
-    public void movieBasicResults(int id, boolean clear) {
-
-        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(clear,1,id);
-
-        fetchMovieInfo.execute();
-
-    }
-
-    public void movieSearchResult( String text) {
-
-        this.query = text;
-
-        SearchMovieInfo searchMovieInfo = new SearchMovieInfo(text);
-
-        searchMovieInfo.execute();
-
-
-    }
-
-    public void loadSearchMovieInfoByPage(int page) {
-
-        FetchMovieBasic fetchMovieInfo = new FetchMovieBasic(false,page,DISCOVER_ID);
-
-        fetchMovieInfo.execute();
-
-    }
-
-    public void fetchCast(int id){
-        FetchCastFromMovie fetchItAgain = new FetchCastFromMovie();
-        fetchItAgain.execute(id);
-    }
-
-    public Configuration getConfiguration() {
-        return configuration;
-    }
-
-    public interface OnMovieListChangedListener {
-
-        void onMovieListChanged();
-
-    }
-
-    private void notifyAllMovieListeners() {
-
-        for (OnMovieListChangedListener listener: listeners) {
-
-            listener.onMovieListChanged();
-
-        }
-
-    }
-
-    public void addOnMovieListChangedListener(OnMovieListChangedListener onMovieListChangedListener) {
-
-        listeners.add(onMovieListChangedListener);
-
-    }
-
-    public void removeOnMovieListChangedListener(OnMovieListChangedListener onMovieListChangedListener) {
-
-        listeners.remove(onMovieListChangedListener);
-    }
-
-    public URL createImageUrl(String path, String size) {
-
-        try {
-            return this.configuration.createImageUrl(path, size);
-        } catch (MovieDbException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-
+        dbAdapter.removeFromWatchlist(tmdb_id);
     }
 
     public List<MediaCreditCast> getCast() {
         return cast;
+    }
+
+    public boolean isOnWatchList(int tmdb_id) {
+
+       return dbAdapter.isOnWatchList(tmdb_id);
+
     }
 }

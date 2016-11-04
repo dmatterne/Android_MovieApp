@@ -32,7 +32,6 @@ public class MovieDetailActivity extends AppCompatActivity implements AppControl
     private MovieInfo movie;
     private TextView release;
     private TextView origLang;
-    private DBAdapter dbAdapter;
     private LinearLayout myGallery;
     private int score;
 //    private MenuItem removeWatchlist;
@@ -49,9 +48,6 @@ public class MovieDetailActivity extends AppCompatActivity implements AppControl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
 
-        dbAdapter = new DBAdapter(this);
-        dbAdapter.open();
-
         Intent i = getIntent();
         movie = (MovieInfo) i.getExtras().get("Movie");
 
@@ -64,7 +60,7 @@ public class MovieDetailActivity extends AppCompatActivity implements AppControl
             @Override
             public void onClick(View view) {
 
-                dbAdapter.insertMovie(movie.getTitle(),movie.getId(),0 ,movie.getOverview(),true);
+                AppController.getInstance().saveMovie(movie.getTitle(),movie.getId(),0 ,movie.getOverview(),true);
                 Snackbar.make(view, "Added to watchlist!", Snackbar.LENGTH_LONG)
                         .setAction("Action",null).show();
                 currentMovieIsOnWatchList();
@@ -76,7 +72,7 @@ public class MovieDetailActivity extends AppCompatActivity implements AppControl
             @Override
             public void onClick(View view) {
 
-                dbAdapter.removeFromWatchlist(movie.getId());
+                AppController.getInstance().removeMovie(movie.getId());
                 Snackbar.make(view, "Removed from watchlist!", Snackbar.LENGTH_LONG)
                         .setAction("Action",null).show();
                 currentMovieIsOnWatchList();
@@ -129,7 +125,7 @@ public class MovieDetailActivity extends AppCompatActivity implements AppControl
     }
 
     private void currentMovieIsOnWatchList() {
-        if(dbAdapter.isOnWatchList(movie.getId())) {
+        if(AppController.getInstance().isOnWatchList(movie.getId())) {
 
             fabAdd.hide();
             fabRemove.show();

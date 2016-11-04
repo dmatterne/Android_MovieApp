@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity
             }
         };
         // Adds the scroll listener to RecyclerView
-        recyclerView.addOnScrollListener(endlessScrollListener);
+//        recyclerView.addOnScrollListener(endlessScrollListener);
 
 
     }
@@ -163,16 +163,18 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.discover) {
+//            recyclerView.addOnScrollListener(endlessScrollListener);
 
             AppController.getInstance().movieBasicResults(DISCOVER_ID,true);
 
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
-
+//            recyclerView.removeOnScrollListener(endlessScrollListener);
+            AppController.getInstance().watchedMovieResults();
 
 
         } else if (id == R.id.nav_disney) {
-
+//            recyclerView.addOnScrollListener(endlessScrollListener);
             AppController.getInstance().movieBasicResults(DISNEY_ID,true);
 
         }
