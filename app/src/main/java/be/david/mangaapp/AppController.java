@@ -13,7 +13,9 @@ import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
 import com.omertron.themoviedbapi.enumeration.SearchType;
 import com.omertron.themoviedbapi.model.config.Configuration;
+import com.omertron.themoviedbapi.model.credits.MediaCreditCast;
 import com.omertron.themoviedbapi.model.discover.Discover;
+import com.omertron.themoviedbapi.model.media.MediaCreditList;
 import com.omertron.themoviedbapi.model.movie.MovieBasic;
 import com.omertron.themoviedbapi.model.movie.MovieInfo;
 import com.omertron.themoviedbapi.results.ResultList;
@@ -33,9 +35,6 @@ public class AppController extends Application {
     private List<MovieBasic> movieBasicList = new ArrayList<>();
     private List<MovieInfo> movieInfoList = new ArrayList<>();
     private final static boolean ALLOW_ADULT = true;
-
-
-
     private MovieInfo movieInfo = new MovieInfo();
     private String API_KEY;
     private final static int DISCOVER_ID = 1;
@@ -44,6 +43,7 @@ public class AppController extends Application {
     private Configuration configuration;
     private List<OnMovieListChangedListener> listeners = new ArrayList<>();
     private String query;
+    private List<MediaCreditCast> cast = new ArrayList<>();
 
     private TheMovieDbApi api;
 
@@ -234,6 +234,31 @@ public class AppController extends Application {
 
     }
 
+    //cast
+    private class FetchCastFromMovie extends AsyncTask<Integer, Void, MediaCreditList>{
+
+        @Override
+        protected MediaCreditList doInBackground(Integer... params) {
+            try {
+
+                return api.getMovieCredits(params[0].intValue());
+            } catch (MovieDbException e1) {
+                e1.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(MediaCreditList media) {
+            super.onPostExecute(media);
+
+            cast.clear();
+            cast.addAll(media.getCast());
+            notifyAllMovieListeners();
+
+        }
+    }
+
     public void executeFetchConfiguration() {
 
 
@@ -281,6 +306,11 @@ public class AppController extends Application {
 
     }
 
+    public void fetchCast(int id){
+        FetchCastFromMovie fetchItAgain = new FetchCastFromMovie();
+        fetchItAgain.execute(id);
+    }
+
     public Configuration getConfiguration() {
         return configuration;
     }
@@ -324,4 +354,7 @@ public class AppController extends Application {
 
     }
 
+    public List<MediaCreditCast> getCast() {
+        return cast;
+    }
 }

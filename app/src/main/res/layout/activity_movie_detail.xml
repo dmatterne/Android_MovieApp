@@ -8,9 +8,12 @@
     android:fitsSystemWindows="true"
     tools:context="be.david.mangaapp.MainActivity">
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        >
+
+<RelativeLayout
     android:id="@+id/activity_movie_detail"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -63,14 +66,34 @@
         android:layout_toRightOf="@id/detailRelease"
         android:id="@+id/detailOrigLang" />
 
+    <HorizontalScrollView
+        android:layout_below="@id/detailRelease"
+        android:layout_width="match_parent"
+        android:layout_margin="@dimen/fab_margin"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/mygallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            />
+    </HorizontalScrollView>
+
 
     </RelativeLayout>
-
+</ScrollView>
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fabAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_input_add" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabRemove"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:srcCompat="@android:drawable/ic_input_delete" />
 </android.support.design.widget.CoordinatorLayout>

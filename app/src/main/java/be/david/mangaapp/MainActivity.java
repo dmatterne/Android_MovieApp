@@ -169,8 +169,7 @@ public class MainActivity extends AppCompatActivity
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
-            //TODO: Add anime screen
-//            AppController.getInstance().getMovieBasicResults(ANIME_ID);
+
 
         } else if (id == R.id.nav_disney) {
 
