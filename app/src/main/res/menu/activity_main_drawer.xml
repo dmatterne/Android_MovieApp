@@ -12,12 +12,16 @@
             android:title="Watched List" />
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Filtered">
         <menu>
             <item
                 android:id="@+id/nav_disney"
                 android:icon="@drawable/ic_pets_black_24dp"
                 android:title="Disney" />
+            <item
+                android:id="@+id/nav_genre"
+                android:icon="@drawable/ic_view_list_black_24dp"
+                android:title="Genre" />
         </menu>
     </item>
 

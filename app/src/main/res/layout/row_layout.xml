@@ -66,8 +66,6 @@
             android:layout_below="@id/description"
             android:text="@string/cardMovieRelease"/>
 
-
-
     </RelativeLayout>
 
 

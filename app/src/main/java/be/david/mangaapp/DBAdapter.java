@@ -10,6 +10,8 @@ import com.omertron.themoviedbapi.model.movie.MovieBasic;
 
 import java.util.ArrayList;
 
+import be.david.mangaapp.lab.ConnectivityDetector;
+
 /**
  * Created by David on 3/11/2016.
  */
@@ -33,6 +35,7 @@ public class DBAdapter {
     private final static String WATCHED_MOVIE_CLM_OVERVIEW = "OVERVIEW";
     private final static int WATCHED = 1;
     private final static int NOT_WATCHED = 0;
+
 
     private int DATABSE_VERSION = 1;
 

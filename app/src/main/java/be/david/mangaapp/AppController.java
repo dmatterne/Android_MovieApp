@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import be.david.mangaapp.lab.ConnectivityDetector;
+
 /**
  * Created by David on 25/10/2016.
  */
@@ -47,10 +49,15 @@ public class AppController extends Application {
     private TheMovieDbApi api;
     private DBAdapter dbAdapter;
 
+
+
+    private ConnectivityDetector cd;
+
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
+        cd = new ConnectivityDetector(this);
         dbAdapter = new DBAdapter(this);
         dbAdapter.open();
 
@@ -390,5 +397,9 @@ public class AppController extends Application {
 
        return dbAdapter.isOnWatchList(tmdb_id);
 
+    }
+
+    public ConnectivityDetector getConnectivityDetector() {
+        return cd;
     }
 }
