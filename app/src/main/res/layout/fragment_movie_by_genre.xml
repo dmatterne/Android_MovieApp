@@ -2,13 +2,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="layout.GenreFragment">
+    tools:context="layout.MovieByGenreFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/recyclerViewGenre"
+        android:id="@+id/recyclerViewMovieByGenre"
         ></android.support.v7.widget.RecyclerView>
 
 </FrameLayout>

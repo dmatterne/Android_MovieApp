@@ -102,6 +102,8 @@ public class DiscoverFragment extends Fragment implements AppController.OnMovieL
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
 
+        setHasOptionsMenu(true);
+
         View view =  inflater.inflate(R.layout.fragment_discover, container, false);
 
         movieListAdapter = new MovieListAdapter(getContext(), AppController.getInstance().getMovieBasicList());
@@ -214,26 +216,35 @@ public class DiscoverFragment extends Fragment implements AppController.OnMovieL
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        System.out.println("+++++++++++++++++++");
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.main, menu);
 
-        MenuItem searchItem = menu.findItem(R.id.search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-        searchView.setLayoutParams(new ActionBar.LayoutParams(Gravity.RIGHT));
-        searchView.setOnQueryTextListener(this);
+        MenuItem item = menu.add("Search");
+        item.setIcon(android.R.drawable.ic_menu_search);
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        SearchView sv = new SearchView(getActivity());
+        sv.setOnQueryTextListener(this);
+        item.setActionView(sv);
 
-        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(getContext(),DiscoverFragment.class)
-                ));
-        searchView.setIconifiedByDefault(false);
 
-        System.out.println("+++++++++++++++++++" +searchView.isActivated());
+//        super.onCreateOptionsMenu(menu, inflater);
+//        inflater.inflate(R.menu.main, menu);
+//
+//        MenuItem searchItem = menu.findItem(R.id.search);
+//        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+//        searchView.setLayoutParams(new ActionBar.LayoutParams(Gravity.RIGHT));
+//        searchView.setOnQueryTextListener(this);
+//
+//        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+//        searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(getContext(),DiscoverFragment.class)
+//                ));
+//        searchView.setIconifiedByDefault(false);
+
     }
 
     @Override
     public boolean onQueryTextSubmit(String query) {
         System.out.println("query:" + query);
+
+        recyclerView.removeOnScrollListener(endlessScrollListener);
 
         AppController.getInstance().movieSearchResult(query);
         return false;

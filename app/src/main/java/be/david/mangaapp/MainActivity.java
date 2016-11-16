@@ -1,5 +1,6 @@
 package be.david.mangaapp;
 
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -9,17 +10,23 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.omertron.themoviedbapi.model.Genre;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import layout.DiscoverFragment;
-import layout.GenreFragment;
+import layout.MovieByGenreFragment;
 import layout.WatchedListFragment;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, DiscoverFragment.OnFragmentInteractionListener, WatchedListFragment.OnFragmentInteractionListener, GenreFragment.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener, DiscoverFragment.OnFragmentInteractionListener, WatchedListFragment.OnFragmentInteractionListener, MovieByGenreFragment.OnFragmentInteractionListener {
 
     private final static int DISCOVER_ID = 1;
     private final static int ANIME_ID = 2;
@@ -105,7 +112,6 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         Fragment fragment = null;
-        DialogFragment genreFragment = null;
 
         if (id == R.id.discover) {
 
@@ -123,7 +129,28 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_genre) {
 
 
-            genreFragment = GenreFragment.newInstance();
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            List<String> allGenres = new ArrayList<>();
+            for (Genre g : AppController.getInstance().getGenres()) {
+                allGenres.add(g.getName());
+            }
+            String[] allGenreNames = allGenres.toArray(new String[AppController.getInstance().getGenres().size()]);
+            builder.setTitle("Select Genre ")
+                    .setItems(allGenreNames, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            Fragment fragment = MovieByGenreFragment.newInstance(which);
+
+                            if (fragment != null) {
+
+                                FragmentManager fragmentManager = getSupportFragmentManager();
+                                fragmentManager.beginTransaction().replace(R.id.container, fragment).commit();
+
+                            }
+                        }
+                    });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
         }
 
 
@@ -132,16 +159,9 @@ public class MainActivity extends AppCompatActivity
             FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.container, fragment).commit();
 
-        }
 
-        if (genreFragment != null) {
-
-            FragmentManager fragmentManager = getSupportFragmentManager();
-
-            genreFragment.show(fragmentManager,"Dialog");
 
         }
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

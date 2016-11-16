@@ -19,9 +19,11 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.omertron.themoviedbapi.model.credits.MediaCreditCast;
+import com.omertron.themoviedbapi.model.media.Video;
 import com.omertron.themoviedbapi.model.movie.MovieInfo;
 
 import java.net.URL;
+import java.util.List;
 
 public class MovieDetailActivity extends AppCompatActivity implements AppController.OnMovieListChangedListener {
 
@@ -105,6 +107,9 @@ public class MovieDetailActivity extends AppCompatActivity implements AppControl
 
         URL imageUrl = AppController.getInstance().createImageUrl(movie.getBackdropPath(), "w780");
         ImageLoader.getInstance().displayImage(imageUrl.toString(), imageView);
+
+        List<Video> videos = movie.getVideos();
+        Video video = videos.get(0);
 
         AppController.getInstance().fetchCast(movie.getId());
 

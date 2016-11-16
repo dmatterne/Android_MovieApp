@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,26 +20,29 @@ import be.david.mangaapp.R;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link WatchedListFragment.OnFragmentInteractionListener} interface
+ * {@link MovieByGenreFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link WatchedListFragment#newInstance} factory method to
+ * Use the {@link MovieByGenreFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class WatchedListFragment extends Fragment implements AppController.OnMovieListChangedListener{
+public class MovieByGenreFragment extends Fragment implements AppController.OnMovieListChangedListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    private static final String ARG_PARAM1 = "param1";
 
     private RecyclerView recyclerView;
     private MovieListAdapter movieListAdapter;
     private EndlessRecyclerScrollListener endlessScrollListener;
     private LinearLayoutManager linearLayoutManager;
-    private final String KEY_RECYCLER_STATE_WATCHED = "recycler_state_watched";
+    private final String KEY_RECYCLER_STATE = "recycler_state";
     private static Bundle mBundleRecyclerViewState;
 
+    // TODO: Rename and change types of parameters
+    private int whichGenre;
 
     private OnFragmentInteractionListener mListener;
 
-    public WatchedListFragment() {
+    public MovieByGenreFragment() {
         // Required empty public constructor
     }
 
@@ -48,12 +50,14 @@ public class WatchedListFragment extends Fragment implements AppController.OnMov
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @return A new instance of fragment WatchedListFragment.
+     * @param param1 Parameter 1.
+     * @return A new instance of fragment MovieByGenreFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static WatchedListFragment newInstance() {
-        WatchedListFragment fragment = new WatchedListFragment();
+    public static MovieByGenreFragment newInstance(int param1) {
+        MovieByGenreFragment fragment = new MovieByGenreFragment();
         Bundle args = new Bundle();
+        args.putInt(ARG_PARAM1, param1);
         fragment.setArguments(args);
         return fragment;
     }
@@ -62,19 +66,7 @@ public class WatchedListFragment extends Fragment implements AppController.OnMov
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-        }
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        AppController.getInstance().addOnMovieListChangedListener(this);
-        movieListAdapter.notifyDataSetChanged();
-
-        if (savedInstanceState != null) {
-            Parcelable listState = savedInstanceState.getParcelable(KEY_RECYCLER_STATE_WATCHED);
-            recyclerView.getLayoutManager().onRestoreInstanceState(listState);
+            whichGenre = getArguments().getInt(ARG_PARAM1);
         }
     }
 
@@ -85,28 +77,30 @@ public class WatchedListFragment extends Fragment implements AppController.OnMov
 
         setHasOptionsMenu(false);
 
-        View view =  inflater.inflate(R.layout.fragment_watched_list, container, false);
+        View view =  inflater.inflate(R.layout.fragment_movie_by_genre, container, false);
 
         movieListAdapter = new MovieListAdapter(getContext(), AppController.getInstance().getMovieBasicList());
 
-        recyclerView = (RecyclerView) view.findViewById(R.id.recyclerViewWatched);
+        recyclerView = (RecyclerView) view.findViewById(R.id.recyclerViewMovieByGenre);
         recyclerView.setAdapter(movieListAdapter);
         linearLayoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(linearLayoutManager);
 
+        AppController.getInstance().fetchMovieByGenre(whichGenre);
 
-        endlessScrollListener = new EndlessRecyclerScrollListener(linearLayoutManager) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                // Triggered only when new data needs to be appended to the list
-                // Add whatever code is needed to append new items to the bottom of the list
-                AppController.getInstance().loadSearchMovieInfoByPage(page);
-            }
-        };
-        // Adds the scroll listener to RecyclerView
+
+//        endlessScrollListener = new EndlessRecyclerScrollListener(linearLayoutManager) {
+//            @Override
+//            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+//                // Triggered only when new data needs to be appended to the list
+//                // Add whatever code is needed to append new items to the bottom of the list
+//                AppController.getInstance().loadSearchMovieInfoByPage(page);
+//            }
+//        };
+//        // Adds the scroll listener to RecyclerView
 //        recyclerView.addOnScrollListener(endlessScrollListener);
 
-       AppController.getInstance().watchedMovieResults();
+//        AppController.getInstance().movieBasicResults(mParam1,true);
 
         return view;
     }
@@ -135,6 +129,11 @@ public class WatchedListFragment extends Fragment implements AppController.OnMov
         mListener = null;
     }
 
+    @Override
+    public void onMovieListChanged() {
+        movieListAdapter.notifyDataSetChanged();
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -151,8 +150,16 @@ public class WatchedListFragment extends Fragment implements AppController.OnMov
     }
 
     @Override
-    public void onMovieListChanged() {
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        AppController.getInstance().addOnMovieListChangedListener(this);
         movieListAdapter.notifyDataSetChanged();
+
+        if (savedInstanceState != null) {
+            Parcelable listState = savedInstanceState.getParcelable(KEY_RECYCLER_STATE);
+            recyclerView.getLayoutManager().onRestoreInstanceState(listState);
+        }
     }
 
     @Override
@@ -161,18 +168,7 @@ public class WatchedListFragment extends Fragment implements AppController.OnMov
 
         mBundleRecyclerViewState = new Bundle();
         Parcelable listState = recyclerView.getLayoutManager().onSaveInstanceState();
-        mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE_WATCHED, listState);
-
-
-        AppController.getInstance().removeOnMovieListChangedListener(this);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        Parcelable listState = recyclerView.getLayoutManager().onSaveInstanceState();
-        outState.putParcelable(KEY_RECYCLER_STATE_WATCHED, listState);
+        mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE, listState);
 
 
         AppController.getInstance().removeOnMovieListChangedListener(this);
@@ -186,8 +182,19 @@ public class WatchedListFragment extends Fragment implements AppController.OnMov
         movieListAdapter.notifyDataSetChanged();
 
         if (mBundleRecyclerViewState != null) {
-            Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE_WATCHED);
+            Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
             recyclerView.getLayoutManager().onRestoreInstanceState(listState);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        Parcelable listState = recyclerView.getLayoutManager().onSaveInstanceState();
+        outState.putParcelable(KEY_RECYCLER_STATE, listState);
+
+
+        AppController.getInstance().removeOnMovieListChangedListener(this);
     }
 }
